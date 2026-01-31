@@ -1,4 +1,3 @@
-import os
 import pyodbc
 import pandas as pd
 from vanna.google import GoogleGeminiChat
@@ -15,7 +14,7 @@ class MyVanna(ChromaDB_VectorStore, GoogleGeminiChat):
         # Build your connection string
         conn_str = (
             "DRIVER={ODBC Driver 17 for SQL Server};"
-            "SERVER=YOUR_SERVER_NAME;"  # e.g., localhost or 192.168.1.5
+            "SERVER=localhost;"  # e.g., localhost or 192.168.1.5
             "DATABASE=YOUR_DB_NAME;"
             "UID=YOUR_USERNAME;"
             "PWD=YOUR_PASSWORD;"
