@@ -1,0 +1,49 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+node_modules
+dist
+dist-ssr
+*.local
+.eslintcache
+
+# IDDA Project - Environment / Secret files
+# Never commit your API keys or database credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python Backend (IDDA Services)
+# If you run your Python scripts in the same repo
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing
+/coverage
+
+# Production
+/build
