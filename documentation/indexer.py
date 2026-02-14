@@ -5,8 +5,8 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_core.documents import Document
 
 # --- Configuration ---
-input_file = "enriched_documentation.json"
-persist_dir = "./local_chroma_db"
+input_file = "./documentation/enriched_documentation.json"
+persist_dir = "./documentation/local_chroma_db"
 
 # 1. Load the Data
 if not os.path.exists(input_file):
@@ -21,7 +21,6 @@ print(f"📂 Loaded {len(docs_data)} records.")
 # 2. Convert JSON to LangChain Documents
 documents = []
 for entry in docs_data:
-    # EXTRACT: The AI info is inside the nested 'documentation' dictionary
     doc_info = entry.get('documentation', {})
     
     # Skip entries that failed parsing
@@ -45,8 +44,6 @@ for entry in docs_data:
     documents.append(Document(page_content=content, metadata={"source": table_name}))
 
 # 3. Embed and Store
-# Note: Llama3 is a large model for embeddings (slower). 
-# If you have 'nomic-embed-text' pulled, use that for 10x speed. Otherwise, Llama3 works fine.
 print("🧠 Initializing Embeddings (Llama 3)...")
 embeddings = OllamaEmbeddings(model="llama3") 
 

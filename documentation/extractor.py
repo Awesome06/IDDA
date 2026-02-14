@@ -6,7 +6,7 @@ import urllib.parse
 # Define your raw connection parameters
 params = urllib.parse.quote_plus(
     "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=localhost\\SQLEXPRESS;"  # Double backslash is required in Python strings
+    "SERVER=localhost\\SQLEXPRESS;"
     "DATABASE=DataWarehouse;"
     "Trusted_Connection=yes;"
 )
@@ -17,7 +17,7 @@ engine = create_engine(DATABASE_URL)
 
 def get_target_tables():
     """
-    Fetches the specific list of tables from the Silver layer
+    Fetches the specific list of views from the Gold layer
     using your custom SQL query.
     """
     sql = """
@@ -25,8 +25,7 @@ def get_target_tables():
         TABLE_SCHEMA AS Layer,
         TABLE_NAME
     FROM [DataWarehouse].INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_TYPE = 'BASE TABLE'
-      AND TABLE_SCHEMA IN ('Silver') -- Filter for only these layers
+    WHERE TABLE_SCHEMA = 'Gold' AND TABLE_TYPE = 'VIEW'
     ORDER BY TABLE_SCHEMA, TABLE_NAME;
     """
     
@@ -46,16 +45,15 @@ def get_table_profile(schema, table_name):
     
     print(f"Processing: {full_table_name}...")
     
-    # A. Get Technical Metadata (Columns, PKs)
-    # Note: SQLAlchemy inspector needs schema passed separately
-    columns = inspector.get_columns(table_name, schema=schema)
-    pks = inspector.get_pk_constraint(table_name, schema=schema)
-    
     # B. Get Data Profile (Lightweight)
     # We use the full name here to ensure we query the right layer
     query = text(f"SELECT TOP 1000 * FROM {full_table_name}")
     
     try:
+        # A. Get Technical Metadata (Columns, PKs)
+        columns = inspector.get_columns(table_name, schema=schema)
+        pks = inspector.get_pk_constraint(table_name, schema=schema)
+
         df = pd.read_sql(query, engine)
         
         stats = {
@@ -64,7 +62,6 @@ def get_table_profile(schema, table_name):
         }
         
         for col in df.columns:
-            # Handle all-null columns gracefully
             if df[col].isnull().all():
                 sample_vals = []
             else:
@@ -80,7 +77,7 @@ def get_table_profile(schema, table_name):
         return {
             "table_name": table_name,
             "schema": schema,
-            "columns": [c['name'] for c in columns], # Just keeping names for simplicity
+            "columns": [c['name'] for c in columns],
             "primary_keys": pks,
             "profile": stats
         }
@@ -93,7 +90,7 @@ def get_table_profile(schema, table_name):
 if __name__ == "__main__":
     
     # 1. Get the list of tables to scan
-    print("Fetching table list from Silver layer...")
+    print("Fetching view list from Gold layer...")
     tables_df = get_target_tables()
     
     all_profiles = []
@@ -109,7 +106,7 @@ if __name__ == "__main__":
             all_profiles.append(profile_data)
 
     # 3. Save to JSON (This file will be fed to the AI Generator)
-    output_file = "raw_metadata.json"
+    output_file = "./documentation/raw_metadata.json"
     with open(output_file, "w") as f:
         json.dump(all_profiles, f, indent=4, default=str)
         

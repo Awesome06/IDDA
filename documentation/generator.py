@@ -1,6 +1,6 @@
 import json
 import os
-import re  # Added for Regex
+import re
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
@@ -40,11 +40,10 @@ def extract_json_snippet(text):
     from any conversational filler text.
     """
     try:
-        # Regex to find the outermost curly braces
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if match:
             return match.group(0)
-        return text  # Return original if no brackets found
+        return text
     except Exception:
         return text
 
@@ -61,8 +60,6 @@ def enrich_metadata(raw_data):
             "table_name": table_name, 
             "profile": profile_str
         })
-        
-        # --- THE FIX: Extract only the JSON part ---
         clean_json_text = extract_json_snippet(response_text)
         
         # Parse
@@ -83,8 +80,8 @@ def enrich_metadata(raw_data):
 # --- Main Execution ---
 if __name__ == "__main__":
     
-    input_file = "raw_metadata.json"
-    output_file = "enriched_documentation.json"
+    input_file = "./documentation/raw_metadata.json"
+    output_file = "./documentation/enriched_documentation.json"
     
     if not os.path.exists(input_file):
         print(f"❌ File {input_file} not found!")

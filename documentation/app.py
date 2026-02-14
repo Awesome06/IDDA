@@ -3,7 +3,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_ollama import OllamaEmbeddings, OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_classic.chains import create_retrieval_chain
-from langchain_classic.chains import create_stuff_documents_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 
 # Page Config
 st.set_page_config(page_title="Local AI Data Dictionary", layout="wide")
@@ -16,8 +16,7 @@ def load_chain():
     embeddings = OllamaEmbeddings(model="llama3")
     
     # 2. Setup Vector DB
-    # Note: If 'embedding_function' fails, try 'embedding' (depends on Chroma version)
-    vector_db = Chroma(persist_directory="./local_chroma_db", embedding_function=embeddings)
+    vector_db = Chroma(persist_directory="./documentation/local_chroma_db", embedding_function=embeddings)
     
     # 3. Setup LLM
     llm = OllamaLLM(model="llama3")
