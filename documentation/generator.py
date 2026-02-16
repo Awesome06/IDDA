@@ -52,7 +52,7 @@ def enrich_metadata(raw_data):
     print(f"🤖 Analyzing: {table_name}...")
     
     # Convert profile dict to string
-    profile_str = json.dumps(raw_data.get('profile', {}), default=str)
+    profile_str = json.dumps(raw_data.get('profile', {}))
     
     try:
         # Invoke LLM

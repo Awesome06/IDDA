@@ -69,7 +69,7 @@ def get_table_profile(schema, table_name):
 
             stats["columns"][col] = {
                 "type": str(df[col].dtype),
-                "unique_values": df[col].nunique(),
+                "unique_values": int(df[col].nunique()),
                 "missing_values": int(df[col].isnull().sum()),
                 "sample_values": sample_vals
             }
@@ -78,7 +78,7 @@ def get_table_profile(schema, table_name):
             "table_name": table_name,
             "schema": schema,
             "columns": [c['name'] for c in columns],
-            "primary_keys": pks,
+            "primary_keys": pks['constrained_columns'] if pks else [],
             "profile": stats
         }
         
@@ -108,6 +108,6 @@ if __name__ == "__main__":
     # 3. Save to JSON (This file will be fed to the AI Generator)
     output_file = "./documentation/raw_metadata.json"
     with open(output_file, "w") as f:
-        json.dump(all_profiles, f, indent=4, default=str)
+        json.dump(all_profiles, f, indent=4)
         
     print(f"✅ Success! Extracted metadata for {len(all_profiles)} tables to {output_file}")
