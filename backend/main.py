@@ -6,7 +6,7 @@ import pandas as pd
 import ollama
 
 app = FastAPI()
-TARGET_SCHEMA = "silver"
+TARGET_SCHEMA = "gold"
 
 # Allow Frontend to communicate with Backend
 app.add_middleware(
@@ -30,28 +30,28 @@ def get_engine(db_url):
 
 @app.post("/connect")
 def connect_db(connection_string: str = Body(..., embed=True)):
-    """Validates connection and returns list of tables in the SILVER schema."""
+    """Validates connection and returns list of views in the GOLD schema."""
     engine = get_engine(connection_string)
     
-    tables = []
+    views = []
     try:
         with engine.connect() as connection:
-            # 1. Direct query to finding tables in 'silver' schema
+            # 1. Direct query to finding views in 'gold' schema
             # We use text() to execute raw SQL safely
-            query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'silver'")
-            result = connection.execute(query)
-            tables = [row[0] for row in result]
+            query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = :schema")
+            result = connection.execute(query, {"schema": TARGET_SCHEMA})
+            views = [row[0] for row in result]
             
-            # 2. If 'silver' is empty, try 'dbo' just in case
-            if not tables:
-                query_dbo = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo'")
+            # 2. If 'gold' is empty, try 'dbo' just in case
+            if not views:
+                query_dbo = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = 'dbo'")
                 result_dbo = connection.execute(query_dbo)
-                tables = [row[0] for row in result_dbo]
+                views = [row[0] for row in result_dbo]
                 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Query failed: {str(e)}")
             
-    return {"tables": tables}
+    return {"tables": views}
 
 @app.post("/analyze/{table_name}")
 def analyze_table(table_name: str, connection_string: str = Body(..., embed=True)):
@@ -59,9 +59,9 @@ def analyze_table(table_name: str, connection_string: str = Body(..., embed=True
     engine = get_engine(connection_string)
     
     # 1. Handle Schema (Prepend 'silver.' if needed)
-    # If the table name doesn't already have a dot, assume it's in silver
+    # If the view name doesn't already have a dot, assume it's in gold
     if "." not in table_name:
-        full_table_ref = f"silver.{table_name}"
+        full_table_ref = f"{TARGET_SCHEMA}.{table_name}"
     else:
         full_table_ref = table_name
 
@@ -101,7 +101,7 @@ def analyze_table(table_name: str, connection_string: str = Body(..., embed=True
     columns_list = list(df.columns)
 
     summary_prompt = f"""
-    Analyze this database table named '{table_name}'.
+    Analyze this database view named '{table_name}'.
     Columns: {columns_list}
     Sample Data:
     {data_preview}
@@ -110,7 +110,7 @@ def analyze_table(table_name: str, connection_string: str = Body(..., embed=True
     """
     
     schema_prompt = f"""
-    Explain the technical schema of table '{table_name}' to a non-technical user.
+    Explain the technical schema of view '{table_name}' to a non-technical user.
     Columns and types: {schema_info}
     
     Explain the relationships between columns if obvious (e.g., ID linking to other things). Keep it human-friendly.
