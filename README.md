@@ -2,6 +2,7 @@
 Project Repository for HackFest 2.0 GDG New Delhi
 
 Execution Instructions
+
 -Model
 ollama pull llama3 // If not done Previously
 ollama serve
