@@ -3,7 +3,7 @@ Project Repository for HackFest 2.0 GDG New Delhi
 
 #Application Architecture
 
-![Application Architecture](docs/Flow Diagram.png)
+![Application Architecture](docs/flowDiagram.png)
 
 ##Execution Instructions
 
