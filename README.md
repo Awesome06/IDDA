@@ -22,8 +22,3 @@ npm run dev
 cd backend
 
 python main.py
-
-
-**-Connection String**
-
-mssql+pyodbc://IDDA:hackfest2026@localhost/DataWarehouse?driver=ODBC+Driver+17+for+SQL+Server&TrustServerCertificate=yes
