@@ -1,7 +1,11 @@
 # Intelligent_Data_Dictionary_Agent
 Project Repository for HackFest 2.0 GDG New Delhi
 
-Execution Instructions
+#Application Architecture
+
+![Application Architecture](docs/Flow Diagram.png)
+
+##Execution Instructions
 
 **-Model**
 
