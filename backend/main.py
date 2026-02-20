@@ -6,9 +6,12 @@ import pandas as pd
 import ollama
 
 app = FastAPI()
-TARGET_SCHEMA = "gold"
+TARGET_SCHEMA = "dbo"
 
 # Allow Frontend to communicate with Backend
+# WARNING: In a production environment, you should restrict the allowed origins
+# to the specific domain of your frontend application for security reasons.
+# Example: allow_origins=["http://localhost:5173", "https://your-frontend-app.com"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,8 +23,9 @@ app.add_middleware(
 def get_engine(db_url):
     try:
         engine = create_engine(db_url)
-        with engine.connect() as conn:
-            pass # Test connection
+        # Test connection by trying to connect
+        with engine.connect():
+            pass
         return engine
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Connection failed: {str(e)}")
@@ -30,51 +34,46 @@ def get_engine(db_url):
 
 @app.post("/connect")
 def connect_db(connection_string: str = Body(..., embed=True)):
-    """Validates connection and returns list of views in the GOLD schema."""
+    """Validates connection and returns list of tables in the dbo schema."""
     engine = get_engine(connection_string)
-    
-    views = []
+
     try:
-        with engine.connect() as connection:
-            # 1. Direct query to finding views in 'gold' schema
-            # We use text() to execute raw SQL safely
-            query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = :schema")
-            result = connection.execute(query, {"schema": TARGET_SCHEMA})
-            views = [row[0] for row in result]
-            
-            # 2. If 'gold' is empty, try 'dbo' just in case
-            if not views:
-                query_dbo = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = 'dbo'")
-                result_dbo = connection.execute(query_dbo)
-                views = [row[0] for row in result_dbo]
-                
+        inspector = inspect(engine)
+        tables = inspector.get_table_names(schema=TARGET_SCHEMA)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Query failed: {str(e)}")
-            
-    return {"tables": views}
+        raise HTTPException(status_code=400, detail=f"Failed to retrieve tables: {str(e)}")
+
+    return {"tables": tables}
 
 @app.post("/analyze/{table_name}")
 def analyze_table(table_name: str, connection_string: str = Body(..., embed=True)):
     """Generates Metrics, Schema, and AI Insights."""
     engine = get_engine(connection_string)
-    
-    # 1. Handle Schema (Prepend 'silver.' if needed)
-    # If the view name doesn't already have a dot, assume it's in gold
-    if "." not in table_name:
-        full_table_ref = f"{TARGET_SCHEMA}.{table_name}"
-    else:
-        full_table_ref = table_name
 
-    # 2. Handle SQL Syntax (TOP vs LIMIT)
-    # Check if the connection string is for SQL Server
-    is_mssql = "mssql" in connection_string or "sql server" in connection_string.lower()
+    # 1. Validate that the table exists in the target schema to prevent SQL injection.
+    try:
+        inspector = inspect(engine)
+        if table_name not in inspector.get_table_names(schema=TARGET_SCHEMA):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Table '{table_name}' not found in schema '{TARGET_SCHEMA}'.",
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Could not verify table existence: {str(e)}"
+        )
 
-    if is_mssql:
+    # 2. Safely quote identifiers for the query to provide a defense-in-depth layer.
+    preparer = engine.dialect.identifier_preparer
+    full_table_ref = f"{preparer.quote(TARGET_SCHEMA)}.{preparer.quote(table_name)}"
+
+    # 3. Handle SQL Syntax (TOP vs LIMIT) based on the database dialect.
+    if engine.dialect.name == "mssql":
         query = f"SELECT TOP 100 * FROM {full_table_ref}"
-        count_query = f"SELECT COUNT(*) FROM {full_table_ref}"
     else:
         query = f"SELECT * FROM {full_table_ref} LIMIT 100"
-        count_query = f"SELECT COUNT(*) FROM {full_table_ref}"
+
+    count_query = f"SELECT COUNT(*) FROM {full_table_ref}"
 
     # A. Fetch Data
     try:
@@ -97,20 +96,20 @@ def analyze_table(table_name: str, connection_string: str = Body(..., embed=True
     schema_info = df.dtypes.astype(str).to_dict()
     
     # D. AI Generation
-    data_preview = df.head(5).to_markdown(index=False)
+    data_pretable = df.head(5).to_markdown(index=False)
     columns_list = list(df.columns)
 
     summary_prompt = f"""
-    Analyze this database view named '{table_name}'.
+    Analyze this database table named '{table_name}'.
     Columns: {columns_list}
     Sample Data:
-    {data_preview}
+    {data_pretable}
     
     Write a brief "Business Friendly Summary" (2-3 sentences) describing what this data represents and a "Use Case" for why a business would analyze it.
     """
     
     schema_prompt = f"""
-    Explain the technical schema of view '{table_name}' to a non-technical user.
+    Explain the technical schema of table '{table_name}' to a non-technical user.
     Columns and types: {schema_info}
     
     Explain the relationships between columns if obvious (e.g., ID linking to other things). Keep it human-friendly.
