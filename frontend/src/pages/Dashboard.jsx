@@ -21,6 +21,12 @@ export default function Dashboard() {
     navigate(`/table/${schemaName}/${itemName}`);
   };
 
+  const handleDisconnect = () => {
+    localStorage.removeItem('dbUrl');
+    localStorage.removeItem('schemas');
+    navigate('/');
+  };
+
   const selectedSchema = schemas.find(s => s.schema_name === selectedSchemaName);
 
   return (
@@ -28,11 +34,8 @@ export default function Dashboard() {
       {/* Header */}
       <header className="dashboard-header">
         <div className="flex-1">
-          <button
-            className="back-button"
-            onClick={() => navigate('/')}
-          >
-            &larr; Landing
+          <button className="back-button" onClick={handleDisconnect}>
+            &larr; Disconnect
           </button>
         </div>
         <h1 className="dashboard-header-title">Intelligent Data Agent</h1>
