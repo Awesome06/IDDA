@@ -1,0 +1,15 @@
+{
+    "metrics": {
+        "total_rows": 7,
+        "columns": 2,
+        "completeness": 100.0,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business-Friendly Summary**\n\nThis dataset, 'categories', contains information about different types of bicycles, categorized by their characteristics. The table has two columns: 'category_id' which is a unique identifier for each category, and 'category_name' which describes the type of bicycle. This data can be used to understand the diversity of products offered by a bicycle company or retailer.\n\n**Use Case**\n\nA business may analyze this dataset to better understand their product offerings and identify opportunities to improve customer satisfaction and drive sales. For example, an online bike shop might use this data to create targeted marketing campaigns for specific categories of bicycles, such as \"Children Bicycles\" or \"Electric Bikes\", to appeal to customers with specific needs or preferences. By analyzing the categories, the business can make informed decisions about product development, pricing, and inventory management to better meet customer demand.",
+    "schema_explanation": "The \"categories\" table is like a library cataloging system, where you keep track of different categories or groups that your data belongs to. In this case, there are two main columns:\n\n* `category_id`: This column is like a unique address for each category. It's an integer (a whole number) and serves as a special identifier for each category.\n* `category_name`: This column stores the actual name of the category, like \"Electronics\" or \"Books\". The data type is string, which means it can hold words or phrases.\n\nThink of these categories like folders on your computer or files in a spreadsheet. Just like how you might organize your documents into folders like \"Work\", \"Personal\", and \"Photos\", this table helps you categorize your data into different groups.\n\nThere isn't an obvious relationship between the `category_id` and other tables, as this is more of a standalone cataloging system. However, in a larger database context, these categories could be linked to related data, such as product names, descriptions, or even images. For example:\n\n* In an e-commerce setting, you might have products like laptops, smartphones, and tablets, each belonging to the \"Electronics\" category.\n* In a library system, books on programming, art, and science might all fall under the \"Books\" category.\n\nThis table's schema is useful when you need to group similar data together, making it easier to search, sort, or analyze. It's like having a special folder for each type of document, allowing you to quickly find what you're looking for!",
+    "raw_schema": {
+        "category_id": "int64",
+        "category_name": "str"
+    }
+}

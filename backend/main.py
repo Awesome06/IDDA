@@ -1,4 +1,7 @@
 # backend/main.py
+import os
+import json
+import hashlib
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, inspect, text
@@ -7,6 +10,7 @@ import ollama
 
 app = FastAPI()
 TARGET_SCHEMA = "dbo"
+CACHE_DIR = "analysis_cache"
 
 # Allow Frontend to communicate with Backend
 # WARNING: In a production environment, you should restrict the allowed origins
@@ -18,6 +22,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- Caching Helpers ---
+def get_cache_path(connection_string: str, table_name: str) -> str:
+    """Creates a unique and safe cache file path."""
+    # Create a hash from the connection string and table name
+    cache_key = hashlib.md5(f"{connection_string}_{table_name}".encode()).hexdigest()
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    return os.path.join(CACHE_DIR, f"{cache_key}.json")
 
 # --- 1. Connection Helper ---
 def get_engine(db_url):
@@ -46,10 +58,29 @@ def connect_db(connection_string: str = Body(..., embed=True)):
     return {"tables": tables}
 
 @app.post("/analyze/{table_name}")
-def analyze_table(table_name: str, connection_string: str = Body(..., embed=True)):
-    """Generates Metrics, Schema, and AI Insights."""
-    engine = get_engine(connection_string)
+def analyze_table(
+    table_name: str,
+    connection_string: str = Body(..., embed=True),
+    force_rerun: bool = False
+):
+    """
+    Generates Metrics, Schema, and AI Insights.
+    Stores results permanently and uses a flag to force re-analysis.
+    """
+    cache_path = get_cache_path(connection_string, table_name)
 
+    # If not forcing a rerun, try to load from cache
+    if not force_rerun and os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r") as f:
+                print(f"✅ Loading from cache: {cache_path}")
+                return json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"⚠️ Cache read failed for {cache_path}: {e}. Rerunning analysis.")
+
+    print(f"🚀 Running new analysis for table '{table_name}'...")
+    engine = get_engine(connection_string)
+    
     # 1. Validate that the table exists in the target schema to prevent SQL injection.
     try:
         inspector = inspect(engine)
@@ -130,12 +161,23 @@ def analyze_table(table_name: str, connection_string: str = Body(..., embed=True
         summary_text = "AI generation failed. Is Ollama running?"
         schema_text = f"Error: {str(e)}"
 
-    return {
+    result = {
         "metrics": metrics,
         "summary": summary_text,
         "schema_explanation": schema_text,
         "raw_schema": schema_info
     }
+
+    # Store the new result in the cache
+    try:
+        with open(cache_path, "w") as f:
+            json.dump(result, f, indent=4)
+        print(f"💾 Saved analysis to cache: {cache_path}")
+    except IOError as e:
+        # Log the error, but don't fail the request if caching fails
+        print(f"❌ Could not write to cache file {cache_path}: {e}")
+
+    return result
 
 if __name__ == "__main__":
     import uvicorn

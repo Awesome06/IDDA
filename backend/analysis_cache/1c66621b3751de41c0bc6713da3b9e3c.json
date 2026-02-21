@@ -1,0 +1,21 @@
+{
+    "metrics": {
+        "total_rows": 10,
+        "columns": 8,
+        "completeness": 98.75,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business-Friendly Summary:**\nThis dataset, named 'staffs', contains information about the employees of a bike shop. It includes details such as staff ID, name, email, phone number, and their relationship to other staff members (i.e., whether they are a manager or not). The data also includes store IDs, which suggests that each employee is associated with a specific store location.\n\n**Use Case:**\nA business would analyze this dataset to gain insights into its workforce and optimize staffing decisions. For instance, the bike shop may want to identify which managers have the most effective teams, which stores are understaffed or overstaffed, or which employees are most productive and deserving of additional training or promotions. By analyzing this data, the business can make informed decisions about staffing levels, training programs, and resource allocation to drive sales growth and customer satisfaction.",
+    "schema_explanation": "Let's break down the technical schema of the \"staffs\" table in simple terms:\n\nThe \"staffs\" table stores information about employees or staff members working at various stores. Here's what each column represents:\n\n* **Staff ID (int64)**: A unique identifier for each staff member, similar to a social security number or an employee ID.\n* **First Name (str) and Last Name (str)**: The staff member's first name and last name, used to identify them.\n* **Email (str)**: The staff member's email address for communication purposes.\n* **Phone (str)**: The staff member's phone number for contacting them directly.\n* **Active (bool)**: A flag indicating whether the staff member is currently active or not (e.g., if they're on leave or retired).\n* **Store ID (int64)**: The store where the staff member works, linking them to a specific location.\n* **Manager ID (float64)**: The unique identifier of the staff member's manager, indicating their chain of command.\n\nThe relationships between columns are:\n\n* A staff member is associated with one store (Store ID), which suggests that each store has its own team of staff members.\n* Each staff member has one manager (Manager ID), implying a hierarchical structure within the organization.\n\nIn simple terms, this schema captures essential information about employees, their workplace, and their management relationships. It can be used to:\n\n* Manage employee records and profiles\n* Track staff availability and scheduling\n* Monitor store performance based on staffing levels\n* Analyze leadership structures and chains of command",
+    "raw_schema": {
+        "staff_id": "int64",
+        "first_name": "str",
+        "last_name": "str",
+        "email": "str",
+        "phone": "str",
+        "active": "bool",
+        "store_id": "int64",
+        "manager_id": "float64"
+    }
+}

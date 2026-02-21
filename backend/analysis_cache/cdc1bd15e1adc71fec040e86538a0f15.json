@@ -1,0 +1,22 @@
+{
+    "metrics": {
+        "total_rows": 1445,
+        "columns": 9,
+        "completeness": 90.33,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business-Friendly Summary:**\n\nThis dataset, 'customers', contains information about individual customers, including their contact details, addresses, and phone numbers. The data provides a snapshot of the customer base for an organization, highlighting key demographics and contact methods.\n\n**Use Case:**\n\nA business would analyze this data to gain insights into its customer base and identify opportunities to improve customer engagement, communication, or even targeted marketing campaigns. For instance, by analyzing the distribution of customers across different geographic regions (city, state), the company could determine where to focus its sales efforts or allocate resources more effectively.",
+    "schema_explanation": "Let's break down the technical schema of the \"customers\" table into simpler terms!\n\nThis table stores information about your customers, which is a crucial part of any business. Think of it like a digital file cabinet for customer data.\n\nThe columns are like labeled folders within that file cabinet. Here's what each column represents:\n\n* **customer_id**: This is a unique identifier (like a customer number) assigned to each customer. It's an integer, which means it can only contain whole numbers.\n* **first_name** and **last_name**: These two columns store the customer's first name and last name, respectively. They're both strings, which means they can contain letters, symbols, and spaces.\n* **phone**, **email**, **street**, **city**, **state**, and **zip_code**: These six columns hold various contact information about each customer, such as their phone number, email address, street address, city, state (like California or New York), and zip code.\n\nNow, let's talk about relationships between these columns. It's clear that the **customer_id** column is used to uniquely identify each customer, making it a key column. This means you can use this unique identifier to look up specific customer information or link multiple related records together.\n\nThe other columns are more descriptive and provide additional context about each customer. For example, you might use the **phone** and **email** columns to contact customers for sales or marketing purposes. The **street**, **city**, **state**, and **zip_code** columns help you deliver products or services to their doorstep.\n\nIn summary, this \"customers\" table is a centralized repository of customer data that can be used for various business purposes, such as:\n\n* Contacting customers directly\n* Sending targeted marketing materials or promotions\n* Shipping products to the correct addresses\n* Analyzing customer demographics and behavior\n\nOverall, understanding the schema of the \"customers\" table provides a solid foundation for managing your customer relationships and making informed business decisions.",
+    "raw_schema": {
+        "customer_id": "int64",
+        "first_name": "str",
+        "last_name": "str",
+        "phone": "str",
+        "email": "str",
+        "street": "str",
+        "city": "str",
+        "state": "str",
+        "zip_code": "str"
+    }
+}

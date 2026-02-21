@@ -1,0 +1,16 @@
+{
+    "metrics": {
+        "total_rows": 939,
+        "columns": 3,
+        "completeness": 100.0,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business-Friendly Summary:**\nThis dataset, 'stocks', represents the current inventory levels of various products across different stores. It captures the quantity of each product stored in individual locations, providing insights into the stock levels and potential demand.\n\n**Use Case:**\nA business analyst would analyze this data to optimize store-level inventory management and ensure that products are being stocked effectively to meet customer demand. By analyzing the 'stocks' table, a retailer could identify which products are selling well at specific stores, adjust inventory levels accordingly, and reduce overstocking or understocking situations, ultimately improving profitability and customer satisfaction.",
+    "schema_explanation": "So, let's break down the technical schema of the \"stocks\" table into simpler language.\n\nThe \"stocks\" table is like a virtual warehouse where you keep track of products and their quantities for each store. It has three main columns:\n\n* 'store_id': This column represents the unique identifier for each store. Think of it like a special code that says, \"This product belongs to Store X.\"\n* 'product_id': This column is similar to the previous one, but instead, it's linked to the specific products being stored. Imagine it as a barcode that uniquely identifies a product.\n* 'quantity': This column keeps track of how many units of each product are currently in stock at each store.\n\nNow, let's talk about relationships between columns. Since 'store_id' and 'product_id' are both unique identifiers, we can think of them like keys that unlock specific information. For instance:\n\n* When you combine a 'store_id' with a 'product_id', it tells you which specific product is stocked at that particular store.\n* You could also use these unique IDs to look up other related information, such as the total quantity of products across all stores or the average stock level for a given product.\n\nThe \"stocks\" table can be used in various scenarios:\n\n1. Inventory management: This table helps you keep track of your products and their quantities across different stores. You can use it to monitor stock levels, identify low-stock situations, or optimize inventory replenishment.\n2. Sales analysis: By analyzing the 'quantity' column, you can gain insights into which products are most popular at each store, helping you make informed decisions about promotions, pricing, or new product offerings.\n3. Supply chain optimization: You could use this table to identify trends in product demand across different stores and regions, allowing you to streamline your supply chain and ensure timely deliveries.\n\nOverall, the \"stocks\" table is a powerful tool for understanding your inventory and making data-driven decisions to drive business growth.",
+    "raw_schema": {
+        "store_id": "int64",
+        "product_id": "int64",
+        "quantity": "int64"
+    }
+}
