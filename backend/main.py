@@ -352,7 +352,13 @@ async def handle_summary_chat(question: str, connection_string: str, schemas_str
             
             # Use a more token-efficient format (YAML-like)
             item_context = f"\n--- Analysis for table/view `{full_name}` ---\n"
-            item_context += f"Summary: {analysis_result.get('summary', 'N/A')}\n"
+            item_context += f"Summary: {analysis_result.get('summary', 'N/A').strip()}\n"
+
+            metrics = analysis_result.get('metrics', {})
+            if metrics:
+                item_context += "Metrics:\n"
+                for key, value in metrics.items():
+                    item_context += f"- {key}: {value}\n"
             
             raw_schema = analysis_result.get('raw_schema', {})
             if raw_schema:
@@ -376,15 +382,19 @@ async def handle_summary_chat(question: str, connection_string: str, schemas_str
     # 5. Final prompt and LLM call
     final_prompt = f"""
     You are an expert data analyst assistant. Your task is to answer questions about a database based on the provided context.
-    The context below contains detailed analysis for the tables/views that are relevant to the user's question, including summaries, schemas, and sample data.
-    Use only the information provided in the context to answer the question. Refer to the sample data to give specific examples in your answer. Do not make up information.
-    If the context is not sufficient, say so.
+    The context below contains detailed analysis for the tables/views that are relevant to the user's question, including summaries, metrics, schemas, and sample data.
+
+    **Instructions for answering:**
+    1.  **For quantitative questions** (e.g., "how many", "what is the total"), use the `Metrics` section. For example, use the `total_rows` metric to answer questions about the number of records.
+    2.  **Do NOT use the `Sample Data` section to answer quantitative questions**, as it only contains a small preview of the data and will lead to incorrect answers.
+    3.  **Use `Sample Data` only to provide qualitative examples** or to understand the format of the data.
+    4.  If the question is about a specific count, calculation, or metric that requires running a new query, state that you cannot answer precisely and recommend the user switch to 'SQL' mode for an exact answer.
 
     --- CONTEXT ---
     {detailed_context_str}
     --- END CONTEXT ---
 
-    Based on the context above, please answer the following question.
+    Based on the context and your instructions, please answer the following question.
     Question: "{question}"
     """
 
