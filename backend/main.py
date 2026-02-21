@@ -407,6 +407,7 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
     """
     Generates and executes a SQL query to answer a question, then summarizes the result.
     """
+    loop = asyncio.get_running_loop()
     # 1. Build schema context for the SQL generation model
     schema_context = f"Database Schema (Dialect: {engine.dialect.name}):\n"
     inspector = inspect(engine)
@@ -433,8 +434,9 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
     # 2. Prompt for SQL generation
     sql_prompt = f"""
     You are an expert SQL developer. Given the following database schema and a user question, write a single, executable SQL query to answer the question.
+    **Pay close attention to the user's question for keywords indicating aggregation (e.g., total, sum, average, count) and use GROUP BY and HAVING or a CTE correctly.**
+    The query should be clean and should not contain any comments.
     Only return the SQL query inside a single ```sql code block. Do not include any other text or explanation.
-
     Database Schema:
     {schema_context}
 
@@ -443,7 +445,6 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
     
     print("🧠 SQL Generator: Creating SQL query...")
     try:
-        loop = asyncio.get_running_loop()
         sql_gen_chat_func = functools.partial(
             ollama.chat, model=SQL_GENERATION_MODEL, messages=[{'role': 'user', 'content': sql_prompt}]
         )
@@ -462,25 +463,97 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"SQL generation LLM call failed: {str(e)}")
 
-    # 3. Execute SQL and return result
-    try:
-        print("Executing SQL query...")
-        with engine.connect() as connection:
-            result_df = pd.read_sql(generated_sql, connection)
-        
-        # 4. Summarize result with another LLM call
-        print("💬 Summarizing SQL results...")
-        result_summary_prompt = f"""
-        A user asked the question: "{question}"
-        The following SQL query was generated and executed:
-        ```sql
-        {generated_sql}
-        ```
-        The query returned {len(result_df)} rows. The result is:
-        {result_df.to_markdown(index=False) if not result_df.empty else "No results found."}
+    # 3. Execute and Correct SQL Query
+    max_retries = 2
+    result_df = None
 
-        Based on this, provide a concise, natural language answer to the user's original question. If the query returned no results, state that.
-        """
+    for i in range(max_retries):
+        try:
+            print(f"Executing SQL query (Attempt {i+1}/{max_retries})...")
+            with engine.connect() as connection:
+                result_df = pd.read_sql(generated_sql, connection)
+            
+            print("✅ SQL executed successfully.")
+            break  # Success, exit loop
+        
+        except Exception as e:
+            print(f"❌ SQL Execution Error on attempt {i+1}: {e}")
+            if i == max_retries - 1:
+                # Last attempt failed, return error to user
+                error_message = f"I tried to generate and fix a SQL query, but it failed to execute.\n\n**Final Error:** {str(e)}"
+                return {"answer": error_message, "generated_sql": generated_sql}
+
+            # On failure, try to fix the SQL
+            print("🧠 SQL Corrector: Attempting to fix SQL query...")
+            
+            fix_prompt = f"""
+            The previous SQL query you generated failed with an error.
+            Your task is to act as an expert SQL debugger. Meticulously analyze the database schema, the user's question, the failed query, and the error message to produce a corrected, executable SQL query.
+
+            **1. Analyze the User's Question:**
+            - User Question: "{question}"
+            - Does the question ask for a total, sum, average, or other aggregation across multiple rows (e.g., "total order value")? If so, you will likely need a `GROUP BY` and a `HAVING` clause, or a Common Table Expression (CTE). A simple `WHERE` clause on a single row's value is probably incorrect for this kind of question.
+
+            **2. Analyze the Failed Query and Error:**
+            - Failed SQL:
+              ```sql
+              {generated_sql}
+              ```
+            - Error Message:
+              {str(e)}
+            - The error "Invalid column name 'X'" means column 'X' is not in the table you're referencing.
+            - The error "Ambiguous column name 'Y'" means column 'Y' exists in multiple tables in your FROM/JOIN clauses. You MUST prefix it with the correct table alias (e.g., `table_alias.Y`).
+
+            **3. Debugging and Correction Steps:**
+            - **Re-evaluate Logic:** Based on your analysis of the user's question, was the original query's logic correct? For a question like "orders worth more than 500", you must sum the items for each order and then filter. You cannot filter individual items in the `WHERE` clause.
+            - **Consult the Schema:** Look at the `Database Schema` provided below. Find which table *actually* contains the invalid or ambiguous column(s) mentioned in the error.
+            - **Correct Column References:** Correct all column references to use the right table alias (e.g., `oi.discount`, `st.store_name`). **This is especially important in WHERE, GROUP BY, and ORDER BY clauses to avoid "Ambiguous column name" errors.**
+            - **Fix JOINs:** Ensure all necessary tables are joined correctly. To link orders to products, you MUST go through the `order_items` table.
+            - **Use CTEs for Clarity:** For complex logic involving aggregation and filtering, using a Common Table Expression (CTE) is the best practice. First, calculate the aggregate values in the CTE, then join the results back to other tables.
+            
+            **Database Schema:**
+            {schema_context}
+
+            Based on this rigorous analysis, provide a corrected SQL query. The query should be clean and should not contain any comments.
+            Only return the corrected SQL query inside a single ```sql code block. Do not include any other text or explanation.
+            """
+            
+            try:
+                sql_fix_chat_func = functools.partial(
+                    ollama.chat, model=SQL_GENERATION_MODEL, messages=[{'role': 'user', 'content': fix_prompt}]
+                )
+                sql_response = await loop.run_in_executor(None, sql_fix_chat_func)
+                generated_sql = sql_response['message']['content'].strip()
+                
+                match = re.search(r"```sql\n(.*?)\n```", generated_sql, re.DOTALL)
+                if match:
+                    generated_sql = match.group(1).strip()
+                else:
+                    generated_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
+                
+                print(f"✅ Generated Corrected SQL:\n{generated_sql}")
+            except Exception as llm_e:
+                # If the LLM call itself fails, we can't continue.
+                raise HTTPException(status_code=500, detail=f"SQL correction LLM call failed: {str(llm_e)}")
+
+    # 4. Summarize result with another LLM call
+    if result_df is None:
+        # This should not be reached if the loop logic is correct, but as a safeguard:
+        return {"answer": "An unexpected error occurred during SQL execution.", "generated_sql": generated_sql}
+
+    print("💬 Summarizing SQL results...")
+    result_summary_prompt = f"""
+    A user asked the question: "{question}"
+    The following SQL query was generated and executed:
+    ```sql
+    {generated_sql}
+    ```
+    The query returned {len(result_df)} rows. The result is:
+    {result_df.to_markdown(index=False) if not result_df.empty else "No results found."}
+
+    Based on this, provide a concise, natural language answer to the user's original question. If the query returned no results, state that.
+    """
+    try:
         answer_chat_func = functools.partial(
             ollama.chat, model=BUSINESS_SUMMARY_MODEL, messages=[{'role': 'user', 'content': result_summary_prompt}]
         )
@@ -488,10 +561,9 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
         answer = answer_response['message']['content']
 
         return {"answer": answer, "generated_sql": generated_sql}
-
     except Exception as e:
-        error_message = f"I generated a SQL query, but it failed to execute. This could be due to a complex question or an issue with the query itself.\n\n**Error:** {str(e)}"
-        print(f"❌ SQL Execution Error: {e}")
+        error_message = f"I was able to execute the query, but failed to generate a natural language summary.\n\n**Error:** {str(e)}"
+        print(f"❌ Summarization Error: {e}")
         return {"answer": error_message, "generated_sql": generated_sql}
 
 @app.post("/chat")
