@@ -3,6 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 
+// Helper to convert strings to Title Case for display
+const toTitleCase = (str) => {
+  if (!str) return '';
+
+  const spaced = String(str)
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // For acronyms like HTTPRequest -> HTTP Request
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2') // For camelCase -> camel Case
+    .replace(/[_-]+/g, ' ') // For snake_case or kebab-case
+    .trim();
+
+  if (!spaced) return '';
+
+  return spaced
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize first letter of each word
+    .join(' ');
+};
+
 // Reusable component for loading state
 const LoadingSpinner = ({ message }) => (
   <div className="loading-overlay">
@@ -93,7 +111,7 @@ export default function TableView() {
           &larr; Dashboard
         </button>
         <h1 className="table-view-title">
-          Analysis: <span className="font-mono">{schemaName === '_default_' ? '' : `${schemaName}.`}{itemName}</span>
+          Analysis: <span>{schemaName === '_default_' ? toTitleCase(itemName) : `${toTitleCase(schemaName)}.${toTitleCase(itemName)}`}</span>
         </h1>
         <div className="header-actions">
           <button onClick={handleRefresh} className="refresh-button" disabled={loading}>

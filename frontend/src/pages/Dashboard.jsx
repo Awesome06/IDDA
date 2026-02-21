@@ -1,6 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Helper to convert strings to Title Case for display
+const toTitleCase = (str) => {
+  if (!str) return '';
+
+  const spaced = String(str)
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // For acronyms like HTTPRequest -> HTTP Request
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2') // For camelCase -> camel Case
+    .replace(/[_-]+/g, ' ') // For snake_case or kebab-case
+    .trim();
+
+  if (!spaced) return '';
+
+  return spaced
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize first letter of each word
+    .join(' ');
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const schemas = JSON.parse(localStorage.getItem('schemas') || "[]");
@@ -19,8 +37,15 @@ export default function Dashboard() {
     <div className="dashboard-page">
       {/* Header */}
       <header className="dashboard-header">
-        <div className="flex-1"></div> {/* Left Spacer */}
-        <h1 className="dashboard-header-title">Intelligent</h1>
+        <div className="flex-1">
+          <button
+            className="back-button"
+            onClick={() => navigate('/')}
+          >
+            &larr; Landing
+          </button>
+        </div>
+        <h1 className="dashboard-header-title">Intelligent Data Agent</h1>
         <div className="dashboard-header-actions">
           <button
             className="dashboard-chat-button"
@@ -42,7 +67,7 @@ export default function Dashboard() {
                 className={`schema-button ${selectedSchemaName === schema.schema_name ? 'active' : ''}`}
                 onClick={() => setSelectedSchemaName(schema.schema_name)}
               >
-                {schema.schema_name === '_default_' ? 'default' : schema.schema_name}
+                {schema.schema_name === '_default_' ? 'Default' : toTitleCase(schema.schema_name)}
               </button>
             ))}
           </nav>
@@ -53,7 +78,7 @@ export default function Dashboard() {
           {selectedSchema ? (
             <div>
               <h2 className="dashboard-schema-title">
-                {selectedSchema.schema_name === '_default_' ? 'default' : selectedSchema.schema_name}
+                {selectedSchema.schema_name === '_default_' ? 'Default' : toTitleCase(selectedSchema.schema_name)}
               </h2>
 
               {/* Tables Grid */}
@@ -67,7 +92,7 @@ export default function Dashboard() {
                         className="item-card"
                         onClick={() => handleItemClick(selectedSchema.schema_name, table)}
                       >
-                        <div className="item-card-name">{table}</div>
+                        <div className="item-card-name">{toTitleCase(table)}</div>
                         <div className="item-card-type">TABLE</div>
                       </div>
                     ))}
@@ -86,7 +111,7 @@ export default function Dashboard() {
                         className="item-card"
                         onClick={() => handleItemClick(selectedSchema.schema_name, view)}
                       >
-                        <div className="item-card-name">{view}</div>
+                        <div className="item-card-name">{toTitleCase(view)}</div>
                         <div className="item-card-type">VIEW</div>
                       </div>
                     ))}
