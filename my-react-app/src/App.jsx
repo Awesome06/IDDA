@@ -1,9 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-
-// 1. Import Common UI Elements (Header and Footer are global)
-import Header from './components/common/Header';
+// 1. Import Common UI Elements
+// THE FIX: Header is removed from here because it is now handled locally within pages like HomePage
 import Footer from './components/common/Footer';
 
 // 2. Import Page Components
@@ -11,8 +10,7 @@ import EntryForm from './components/EntryForm';
 import HomePage from './components/HomePage';
 import LinkingPage from './components/LinkingPage';
 
-// 3. THE FIX: Corrected Global Style Paths
-// Ensure these files exist inside src/styles/
+// 3. Global Style Paths
 import './styles/index.css';
 import './styles/App.css'; 
 
@@ -23,15 +21,17 @@ import { useIddaStatus } from './hooks/useIddaStatus';
  * IDDA PROJECT - MAIN ROOT COMPONENT
  */
 const App = () => {
-  // Use the hook to manage global state (connection, user info)
-  // Fallback object prevents the app from crashing if the hook returns undefined
-  const { isConnected, user } = useIddaStatus() || { isConnected: false, user: null };
+  // Status hook available for future use
+  useIddaStatus();
 
   return (
     <Router>
       <div className="app-container" style={styles.appContainer}>
-        {/* Constant Header: Appears on every page */}
-        <Header connectionStatus={isConnected} userName={user?.name} />
+        {/* THE CHANGE: 
+            The global <Header /> is removed. 
+            The HomePage now manages its own unified navigation bar 
+            containing the logo, title, and search bar.
+        */}
 
         {/* Main Content Area with Route Switching */}
         <main className="main-content fade-in" style={styles.mainContent}>
@@ -39,7 +39,7 @@ const App = () => {
             {/* Initial Entry Form (Entry Point) */}
             <Route path="/" element={<EntryForm />} />
 
-            {/* Main Dashboard - Accessed after EntryForm submission */}
+            {/* Main Dashboard - Now contains the unified single-line header */}
             <Route path="/home" element={<HomePage />} />
 
             {/* Specialized Data Linking Page */}
@@ -50,7 +50,7 @@ const App = () => {
           </Routes>
         </main>
 
-        {/* Global Footer */}
+        {/* Global Footer remains at the bottom of the layout */}
         <Footer />
       </div>
     </Router>
@@ -67,8 +67,8 @@ const styles = {
   },
   mainContent: {
     flex: 1,
-    paddingBottom: '20px', // Space for Footer
-    minHeight: 'calc(100vh - 140px)', 
+    // Adjusting padding since the global header is gone
+    minHeight: '100vh', 
   }
 };
 
