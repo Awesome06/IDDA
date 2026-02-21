@@ -85,8 +85,8 @@ def connect_db(connection_string: str = Body(..., embed=True)):
 def analyze_table(
     schema_name: str,
     item_name: str,
-    connection_string: str = Body(..., embed=True),
-    force_rerun: bool = False
+    connection_string: str = Body(...),
+    force_rerun: bool = Body(False)
 ):
     """
     Generates Metrics, Schema, and AI Insights for a table or view.
@@ -220,8 +220,8 @@ def analyze_table(
 
 @app.post("/chat")
 def chat_with_agent(
-    question: str = Body(..., embed=True),
-    connection_string: str = Body(..., embed=True)
+    question: str = Body(...),
+    connection_string: str = Body(...)
 ):
     """
     Answers natural language questions about the database using schema information
