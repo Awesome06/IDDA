@@ -100,6 +100,8 @@ def analyze_table(table_name: str, connection_string: str = Body(..., embed=True
     columns_list = list(df.columns)
 
     summary_prompt = f"""
+    As a senior business analyst, you have just received a new dataset.
+
     Analyze this database table named '{table_name}'.
     Columns: {columns_list}
     Sample Data:
@@ -113,6 +115,8 @@ def analyze_table(table_name: str, connection_string: str = Body(..., embed=True
     Columns and types: {schema_info}
     
     Explain the relationships between columns if obvious (e.g., ID linking to other things). Keep it human-friendly.
+
+    Do not end on a question. Just provide a clear explanation of the schema and its potential use cases in simple terms.
     """
 
     model = "llama3" # Ensure you have run 'ollama pull llama3'
