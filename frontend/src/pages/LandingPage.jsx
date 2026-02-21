@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function LandingPage() {
-  // Default string for testing (Postgres example)
-  const [dbUrl, setDbUrl] = useState("postgresql://user:password@localhost/dbname");
+  // Default string for testing (SQL Server example)
+  const [dbUrl, setDbUrl] = useState("Enter Your Database Connection String");
   const navigate = useNavigate();
 
   const handleConnect = async () => {
@@ -20,23 +20,24 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-4xl font-bold mb-8 text-blue-600">AI Database Explorer</h1>
-      <div className="bg-white p-8 rounded shadow-lg w-96">
-        <label className="block mb-2 font-semibold">Database Connection String</label>
-        <input 
-          className="w-full border p-2 rounded mb-4" 
-          value={dbUrl} 
-          onChange={(e) => setDbUrl(e.target.value)} 
-          placeholder="postgresql://..." 
-        />
-        <button 
-          onClick={handleConnect}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-        >
-          Connect & Scan
-        </button>
-      </div>
+  <div className="landing-page-container">
+    <div className="landing-page-card">
+      <h1 className="landing-page-title">
+        AI Database Explorer
+      </h1>
+      <input 
+        className="landing-page-input"
+        value={dbUrl} 
+        onChange={(e) => setDbUrl(e.target.value)} 
+        placeholder="mssql+pyodbc://..." 
+      />
+      <button 
+        onClick={handleConnect}
+        className="landing-page-button"
+      >
+        Connect & Scan
+      </button>
     </div>
-  );
+  </div>
+);
 }

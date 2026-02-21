@@ -31,9 +31,9 @@ export default function TableView() {
     <div className="p-8 max-w-5xl mx-auto space-y-8">
       
       {/* SECTION 1: Top (Business Summary) */}
-      <section className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
-        <h2 className="text-2xl font-bold text-blue-800 mb-4">📢 Executive Summary</h2>
-        <div className="prose text-gray-700">
+      <section className="bg-white p-6 rounded-lg border border-gray-200 shadow">
+        <h2 className="text-2xl font-bold text-black mb-4">📢 Executive Summary</h2>
+        <div className="prose text-black">
           <ReactMarkdown>{data.summary}</ReactMarkdown>
         </div>
       </section>
@@ -41,20 +41,20 @@ export default function TableView() {
       {/* SECTION 2: Middle (Dashboard Metrics) */}
       <section className="grid grid-cols-3 gap-4">
         <MetricCard title="Total Rows" value={data.metrics.total_rows} />
-        <MetricCard title="Completeness" value={`${data.metrics.completeness}%`} color="text-green-600" />
+        <MetricCard title="Completeness" value={`${data.metrics.completeness}%`} />
         <MetricCard title="Columns" value={data.metrics.columns} />
       </section>
 
       {/* SECTION 3: Bottom (Schema & Explanation) */}
       <section className="bg-white p-6 rounded shadow border">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">🧬 Schema Analysis</h2>
+        <h2 className="text-2xl font-bold text-black mb-4">🧬 Schema Analysis</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="prose text-sm text-gray-600">
-             <h3 className="font-semibold text-gray-900">AI Explanation</h3>
+          <div className="prose text-sm text-black">
+             <h3 className="font-semibold text-black">AI Explanation</h3>
              <ReactMarkdown>{data.schema_explanation}</ReactMarkdown>
           </div>
-          <div className="bg-gray-50 p-4 rounded text-xs font-mono">
-            <h3 className="font-semibold text-gray-900 mb-2">Technical Types</h3>
+          <div className="bg-white border border-gray-200 p-4 rounded text-xs font-mono">
+            <h3 className="font-semibold text-black mb-2">Technical Types</h3>
             <pre>{JSON.stringify(data.raw_schema, null, 2)}</pre>
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function TableView() {
   );
 }
 
-function MetricCard({ title, value, color = "text-gray-900" }) {
+function MetricCard({ title, value, color = "text-black" }) {
   return (
     <div className="bg-white p-6 rounded shadow text-center">
       <h3 className="text-gray-500 text-sm uppercase tracking-wider">{title}</h3>
