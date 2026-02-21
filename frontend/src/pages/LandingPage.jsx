@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export default function LandingPage() {
   // Default string for testing (SQL Server example)
-  const [dbUrl, setDbUrl] = useState("Enter Your Database Connection String");
+  const [dbUrl, setDbUrl] = useState("");
   const navigate = useNavigate();
 
   const handleConnect = async () => {
@@ -29,7 +29,7 @@ export default function LandingPage() {
         className="landing-page-input"
         value={dbUrl} 
         onChange={(e) => setDbUrl(e.target.value)} 
-        placeholder="mssql+pyodbc://..." 
+        placeholder="Enter Your Database Connection String" 
       />
       <button 
         onClick={handleConnect}
