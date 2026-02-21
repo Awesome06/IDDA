@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pandas
+ollama
+# Optional: Install the driver for your specific database
+# psycopg2-binary  # For PostgreSQL
+# pymssql          # For SQL Server
