@@ -63,8 +63,7 @@ python -m venv .venv
 # On macOS/Linux: source .venv/bin/activate
 
 # Install the required Python packages
-# (For a production setup, create a requirements.txt file)
-pip install fastapi "uvicorn[standard]" sqlalchemy pandas ollama
+pip install -r requirements.txt
 
 # You may also need a database driver, e.g.:
 # pip install psycopg2-binary  # For PostgreSQL
@@ -99,4 +98,4 @@ Open your web browser and navigate to **`http://localhost:5173`** (or the addres
 1.  **Connect**: On the landing page, enter the full SQLAlchemy connection string for your database and click "Connect & Scan".
 2.  **Explore**: The dashboard will appear, showing all the schemas found in your database. Select a schema from the left sidebar to view its tables and views.
 3.  **Analyze**: Click on any table or view card. The application will perform a detailed analysis and display the metrics, AI summary, and schema explanation.
-4.  **Chat**: Click the "Chat" button on the dashboard. You can now ask questions about your database. The agent uses the information from all analyzed tables to provide context-aware answers.
+4.  **Chat**: Click the "Chat" button on the dashboard. You can now ask questions about your database. The agent use
