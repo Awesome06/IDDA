@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // A component for rendering individual messages
 const ChatMessage = ({ message }) => {
@@ -7,7 +9,15 @@ const ChatMessage = ({ message }) => {
   return (
     <div className={`chat-message ${isUser ? 'user-message' : 'ai-message'}`}>
       <div className="message-bubble">
-        <p>{message.text}</p>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+        {message.sql && (
+          <div className="sql-query-display">
+            <h4>Generated SQL:</h4>
+            <pre>
+              <code>{message.sql}</code>
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -20,6 +30,7 @@ export default function Chat() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [chatMode, setChatMode] = useState('summary'); // 'summary' or 'sql'
   const messagesEndRef = useRef(null);
 
   const dbUrl = localStorage.getItem('dbUrl');
@@ -51,7 +62,8 @@ export default function Chat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: input,
-          connection_string: dbUrl
+          connection_string: dbUrl,
+          chat_mode: chatMode,
         })
       });
 
@@ -61,7 +73,7 @@ export default function Chat() {
       }
 
       const data = await response.json();
-      const aiMessage = { sender: 'ai', text: data.answer };
+      const aiMessage = { sender: 'ai', text: data.answer, sql: data.generated_sql };
       setMessages(prev => [...prev, aiMessage]);
 
     } catch (error) {
@@ -80,9 +92,25 @@ export default function Chat() {
           &larr; Dashboard
         </button>
         <h1>Chat with Data Agent</h1>
-        <div style={{ flex: 1 }} />
+        <div style={{ flex: 1 }} /> {/* Spacer to keep title centered */}
       </header>
       <main className="chat-container">
+        <div className="mode-selector-tabs">
+          <button
+            className={`mode-tab ${chatMode === 'summary' ? 'active' : ''}`}
+            onClick={() => setChatMode('summary')}
+            disabled={isLoading}
+          >
+            Business Mode
+          </button>
+          <button
+            className={`mode-tab ${chatMode === 'sql' ? 'active' : ''}`}
+            onClick={() => setChatMode('sql')}
+            disabled={isLoading}
+          >
+            SQL Mode
+          </button>
+        </div>
         <div className="message-list">
           {messages.map((msg, index) => (
             <ChatMessage key={index} message={msg} />
@@ -108,9 +136,11 @@ export default function Chat() {
             placeholder="Ask a question about your data..."
             disabled={isLoading}
           />
-          <button type="submit" disabled={isLoading || !input.trim()}>
-            Send
-          </button>
+          <div className="chat-actions">
+            <button type="submit" disabled={isLoading || !input.trim()}>
+              Send
+            </button>
+          </div>
         </form>
       </footer>
     </div>

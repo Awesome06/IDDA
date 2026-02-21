@@ -346,7 +346,8 @@ button:focus-visible {
 .chat-container {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .message-list {
@@ -355,6 +356,9 @@ button:focus-visible {
   gap: 16px;
   max-width: 800px;
   margin: 0 auto;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-message {
@@ -454,6 +458,48 @@ button:focus-visible {
 .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
 .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes wave { 0%, 60%, 100% { transform: initial; } 30% { transform: translateY(-8px); } }
+
+/* --- Mode Selector Tabs --- */
+.mode-selector-tabs {
+  display: flex;
+  justify-content: center;
+  background-color: #f9fafb; /* Match page background */
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-top: 16px;
+}
+
+.mode-tab {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  background-color: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px; /* Overlap the container's border-bottom */
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.mode-tab:hover {
+  color: #1f2937;
+  border: none; /* Override default button hover */
+  border-bottom: 2px solid #d1d5db;
+}
+
+.mode-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.mode-tab:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  border-bottom-color: transparent !important;
+}
 
 /* --- Table View Page Styles --- */
 .table-view-page {

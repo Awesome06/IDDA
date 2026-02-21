@@ -33,3 +33,36 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Style for displaying the generated SQL query */
+.sql-query-display {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #1e1e1e; /* A slightly different dark shade */
+  border-radius: 8px;
+  border: 1px solid #374151;
+}
+
+.sql-query-display h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sql-query-display pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+  color: #d1d5db;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}

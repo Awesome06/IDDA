@@ -299,21 +299,21 @@ async def handle_summary_chat(question: str, connection_string: str, schemas_str
         selection_context += f"- {s['type']}: {s['full_name']}\n  Summary: {clean_summary}\n  Columns: {columns_list}\n"
 
     selection_prompt = f"""
-You are an expert database router. Your goal is to identify which tables are needed to answer the user's question.
-You will be given a user's question and a list of available data sources with their summaries and columns.
-Analyze the user's question and the data sources to determine the complete set of tables required.
-Think step-by-step: what information is needed, and which tables contain that information? How can they be linked together via ID columns?
-For example, to answer "what categories of products are most popular?", you would need to link `order_items` (for sales data) to `products` (to get `category_id`) and then to `categories` (to get the category name).
+    You are an expert database router. Your goal is to identify which tables are needed to answer the user's question.
+    You will be given a user's question and a list of available data sources with their summaries and columns.
+    Analyze the user's question and the data sources to determine the complete set of tables required.
+    Think step-by-step: what information is needed, and which tables contain that information? How can they be linked together via ID columns?
+    For example, to answer "what categories of products are most popular?", you would need to link `order_items` (for sales data) to `products` (to get `category_id`) and then to `categories` (to get the category name).
 
-Based on this logic, identify all necessary tables from the list below to answer the user's question.
+    Based on this logic, identify all necessary tables from the list below to answer the user's question.
 
-User question: "{question}"
+    User question: "{question}"
 
-Available data sources:
-{selection_context}
+    Available data sources:
+    {selection_context}
 
-Return ONLY a comma-separated list of the full data source names (e.g., schema_name.table_name). Do not add any other text or explanation.
-"""
+    Return ONLY a comma-separated list of the full data source names (e.g., schema_name.table_name). Do not add any other text or explanation.
+    """
     
     try:
         loop = asyncio.get_running_loop()
@@ -375,16 +375,16 @@ Return ONLY a comma-separated list of the full data source names (e.g., schema_n
 
     # 5. Final prompt and LLM call
     final_prompt = f"""
-You are an expert data analyst assistant. Your task is to answer questions about a database based on the provided context.
-The context below contains detailed analysis for the tables/views that are relevant to the user's question, including summaries, schemas, and sample data.
-Use only the information provided in the context to answer the question. Refer to the sample data to give specific examples in your answer. Do not make up information.
+    You are an expert data analyst assistant. Your task is to answer questions about a database based on the provided context.
+    The context below contains detailed analysis for the tables/views that are relevant to the user's question, including summaries, schemas, and sample data.
+    Use only the information provided in the context to answer the question. Refer to the sample data to give specific examples in your answer. Do not make up information.
     If the context is not sufficient, say so.
 
---- CONTEXT ---
-{detailed_context_str}
---- END CONTEXT ---
+    --- CONTEXT ---
+    {detailed_context_str}
+    --- END CONTEXT ---
 
-Based on the context above, please answer the following question.
+    Based on the context above, please answer the following question.
     Question: "{question}"
     """
 
@@ -432,14 +432,14 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
 
     # 2. Prompt for SQL generation
     sql_prompt = f"""
-You are an expert SQL developer. Given the following database schema and a user question, write a single, executable SQL query to answer the question.
-Only return the SQL query inside a single ```sql code block. Do not include any other text or explanation.
+    You are an expert SQL developer. Given the following database schema and a user question, write a single, executable SQL query to answer the question.
+    Only return the SQL query inside a single ```sql code block. Do not include any other text or explanation.
 
-Database Schema:
-{schema_context}
+    Database Schema:
+    {schema_context}
 
-User Question: "{question}"
-"""
+    User Question: "{question}"
+    """
     
     print("🧠 SQL Generator: Creating SQL query...")
     try:
@@ -471,16 +471,16 @@ User Question: "{question}"
         # 4. Summarize result with another LLM call
         print("💬 Summarizing SQL results...")
         result_summary_prompt = f"""
-A user asked the question: "{question}"
-The following SQL query was generated and executed:
-```sql
-{generated_sql}
-```
-The query returned {len(result_df)} rows. The result is:
-{result_df.to_markdown(index=False) if not result_df.empty else "No results found."}
+        A user asked the question: "{question}"
+        The following SQL query was generated and executed:
+        ```sql
+        {generated_sql}
+        ```
+        The query returned {len(result_df)} rows. The result is:
+        {result_df.to_markdown(index=False) if not result_df.empty else "No results found."}
 
-Based on this, provide a concise, natural language answer to the user's original question. If the query returned no results, state that.
-"""
+        Based on this, provide a concise, natural language answer to the user's original question. If the query returned no results, state that.
+        """
         answer_chat_func = functools.partial(
             ollama.chat, model=BUSINESS_SUMMARY_MODEL, messages=[{'role': 'user', 'content': result_summary_prompt}]
         )
