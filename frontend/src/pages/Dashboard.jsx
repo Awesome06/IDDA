@@ -1,76 +1,114 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const schemas = JSON.parse(localStorage.getItem('schemas') || "[]");
 
+  const [selectedSchemaName, setSelectedSchemaName] = useState(
+    schemas.length > 0 ? schemas[0].schema_name : null
+  );
+
   const handleItemClick = (schemaName, itemName) => {
     navigate(`/table/${schemaName}/${itemName}`);
   };
 
+  const selectedSchema = schemas.find(s => s.schema_name === selectedSchemaName);
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      {schemas.map(schema => (
-        <div key={schema.schema_name} className="mb-12">
-          <div className="flex items-center mb-4 border-b pb-2">
-            <svg className="w-6 h-6 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" /><path d="M3 7l9 6 9-6" /></svg>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Schema: <span className="font-mono bg-gray-100 px-2 py-1 rounded text-blue-600">{schema.schema_name === '_default_' ? 'default' : schema.schema_name}</span>
-            </h2>
-          </div>
-
-          {/* Tables */}
-          {schema.tables.length > 0 && (
-            <>
-              <h3 className="text-lg font-semibold text-gray-600 mb-3 ml-9">Tables</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-9">
-                {schema.tables.map(table => (
-                  <div 
-                    key={table} 
-                    onClick={() => handleItemClick(schema.schema_name, table)}
-                    className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-500 transition-all cursor-pointer"
-                  >
-                    <h4 title={table} className="text-md font-semibold text-gray-900 truncate">
-                      {table}
-                    </h4>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Click to analyze with AI
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Views */}
-          {schema.views.length > 0 && (
-            <>
-              <h3 className="text-lg font-semibold text-gray-600 mt-6 mb-3 ml-9">Views</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-9">
-                {schema.views.map(view => (
-                  <div 
-                    key={view} 
-                    onClick={() => handleItemClick(schema.schema_name, view)}
-                    className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-500 transition-all cursor-pointer"
-                  >
-                    <h4 title={view} className="text-md font-semibold text-gray-900 truncate">
-                      {view}
-                    </h4>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Click to analyze with AI
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-          
-          {schema.tables.length === 0 && schema.views.length === 0 && (
-            <p className="ml-9 text-gray-500">No tables or views found in this schema.</p>
-          )}
-
+    <div className="dashboard-page">
+      {/* Header */}
+      <header className="dashboard-header">
+        <div className="flex-1"></div> {/* Left Spacer */}
+        <h1 className="dashboard-header-title">Intelligent Data Agent</h1>
+        <div className="dashboard-header-actions">
+          <button
+            className="dashboard-chat-button"
+            onClick={() => navigate('/chat')}
+          >
+            Chat
+          </button>
         </div>
-      ))}
+      </header>
+
+      <div className="dashboard-main-layout">
+        {/* Left Sidebar for Schemas */}
+        <aside className="dashboard-sidebar">
+          <h2 className="dashboard-sidebar-heading">Schemas</h2>
+          <nav>
+            {schemas.map((schema) => (
+              <button
+                key={schema.schema_name}
+                className={`schema-button ${selectedSchemaName === schema.schema_name ? 'active' : ''}`}
+                onClick={() => setSelectedSchemaName(schema.schema_name)}
+              >
+                {schema.schema_name === '_default_' ? 'default' : schema.schema_name}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Right Content Area */}
+        <main className="dashboard-content-area">
+          {selectedSchema ? (
+            <div>
+              <h2 className="dashboard-schema-title">
+                {selectedSchema.schema_name === '_default_' ? 'default' : selectedSchema.schema_name}
+              </h2>
+
+              {/* Tables Grid */}
+              {selectedSchema.tables && selectedSchema.tables.length > 0 && (
+                <>
+                  <h3 className="section-title">Tables</h3>
+                  <div className="items-grid-container">
+                    {selectedSchema.tables.map((table) => (
+                      <div
+                        key={table}
+                        className="item-card"
+                        onClick={() => handleItemClick(selectedSchema.schema_name, table)}
+                      >
+                        <div className="item-card-name">{table}</div>
+                        <div className="item-card-type">TABLE</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Views Grid */}
+              {selectedSchema.views && selectedSchema.views.length > 0 && (
+                <>
+                  <h3 className="section-title">Views</h3>
+                  <div className="items-grid-container">
+                    {selectedSchema.views.map((view) => (
+                      <div
+                        key={view}
+                        className="item-card"
+                        onClick={() => handleItemClick(selectedSchema.schema_name, view)}
+                      >
+                        <div className="item-card-name">{view}</div>
+                        <div className="item-card-type">VIEW</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {(!selectedSchema.tables || selectedSchema.tables.length === 0) &&
+               (!selectedSchema.views || selectedSchema.views.length === 0) && (
+                <div className="empty-schema-message">
+                  <p>No tables or views found in this schema.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="placeholder-message">
+              <h2>{schemas.length > 0 ? 'Select a schema to view details' : 'No Schemas Found'}</h2>
+              {schemas.length === 0 && <p>Please connect to a database to see schemas.</p>}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

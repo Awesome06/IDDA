@@ -54,7 +54,7 @@ def connect_db(connection_string: str = Body(..., embed=True)):
         # The default schema is represented by `None`, so we always check it.
         schemas_to_check = [None] + inspector.get_schema_names()
         if 'dbo' in schemas_to_check:
-            schemas_to_check.remove('dbo')  # Remove 'dbo' if present, as it's the default schema in SQL Server
+           schemas_to_check.remove('dbo')  # Remove 'dbo' if present, as it's the default schema in SQL Server
 
         all_schemas_info = []
 
