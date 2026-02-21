@@ -4,7 +4,14 @@ import { toTitleCase } from '../utils/stringUtils';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const schemas = JSON.parse(localStorage.getItem('schemas') || "[]");
+  let schemas = [];
+  try {
+    // Safely parse schemas from localStorage
+    schemas = JSON.parse(localStorage.getItem('schemas') || '[]');
+  } catch (e) {
+    console.error("Failed to parse schemas from localStorage:", e);
+    // If parsing fails, schemas will remain an empty array.
+  }
 
   const [selectedSchemaName, setSelectedSchemaName] = useState(
     schemas.length > 0 ? schemas[0].schema_name : null
