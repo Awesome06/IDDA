@@ -1,0 +1,16 @@
+{
+    "metrics": {
+        "total_rows": 939,
+        "columns": 3,
+        "completeness": 100.0,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business-Friendly Summary:**\nThis dataset, named 'stocks', contains information on the quantity of various products held in stock at each store. The data provides a snapshot of the current inventory levels, allowing businesses to track sales trends and make informed decisions about product ordering and storage.\n\n**Use Case:**\nA business would analyze this dataset to identify which products are most popular across different stores, potentially leading to informed stocking decisions and optimized inventory management. For instance, if a certain product is consistently selling out quickly at Store 1 but not as fast at other locations, the business could adjust its ordering strategy for that product to ensure sufficient supply to meet customer demand.",
+    "schema_explanation": "Let me break down the technical schema of the \"stocks\" table for you:\n\nThe \"stocks\" table has three columns: `store_id`, `product_id`, and `quantity`. Think of it like an inventory management system.\n\n* `store_id` is a unique number that identifies which store this stock belongs to. Imagine each store having its own ID, like #123 or #456.\n* `product_id` is another unique number that tells us which specific product this stock is for. For example, if you're selling shoes, the product ID might be 001 for sneakers or 002 for boots.\n* `quantity` shows how many units of that product are currently in stock.\n\nNow, let's talk about relationships between these columns:\n\nThe `store_id` and `product_id` columns are like \"keys\" to find specific records. For instance, if you want to know how many sneakers a particular store has, you'd search for the combination of `store_id` = 123 (let's say) and `product_id` = 001 (sneakers). The resulting row would show you the quantity of sneakers that store currently has.\n\nThe \"stocks\" table is useful in situations where you need to track inventory levels across multiple stores or products. For example:\n\n* A retail chain with many stores might use this table to monitor their overall stock levels and reorder when necessary.\n* An e-commerce platform could use it to keep track of products in stock for different warehouse locations.\n\nIn summary, the \"stocks\" table provides a way to manage inventory across multiple stores or products by linking each record to its corresponding store and product.",
+    "raw_schema": {
+        "store_id": "int64",
+        "product_id": "int64",
+        "quantity": "int64"
+    }
+}

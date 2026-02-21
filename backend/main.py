@@ -9,7 +9,6 @@ import pandas as pd
 import ollama
 
 app = FastAPI()
-TARGET_SCHEMA = "dbo"
 CACHE_DIR = "analysis_cache"
 
 # Allow Frontend to communicate with Backend
@@ -24,10 +23,10 @@ app.add_middleware(
 )
 
 # --- Caching Helpers ---
-def get_cache_path(connection_string: str, table_name: str) -> str:
+def get_cache_path(connection_string: str, schema_name: str, item_name: str) -> str:
     """Creates a unique and safe cache file path."""
-    # Create a hash from the connection string and table name
-    cache_key = hashlib.md5(f"{connection_string}_{table_name}".encode()).hexdigest()
+    # Create a hash from the connection string, schema, and item name
+    cache_key = hashlib.md5(f"{connection_string}_{schema_name}_{item_name}".encode()).hexdigest()
     os.makedirs(CACHE_DIR, exist_ok=True)
     return os.path.join(CACHE_DIR, f"{cache_key}.json")
 
@@ -46,28 +45,54 @@ def get_engine(db_url):
 
 @app.post("/connect")
 def connect_db(connection_string: str = Body(..., embed=True)):
-    """Validates connection and returns list of tables in the dbo schema."""
+    """Validates connection and returns a list of schemas with their tables and views."""
     engine = get_engine(connection_string)
+    inspector = inspect(engine)
 
     try:
-        inspector = inspect(engine)
-        tables = inspector.get_table_names(schema=TARGET_SCHEMA)
+        # Get all schema names. Some DBs like SQLite return an empty list.
+        # The default schema is represented by `None`, so we always check it.
+        schemas_to_check = [None] + inspector.get_schema_names()
+        if 'dbo' in schemas_to_check:
+            schemas_to_check.remove('dbo')  # Remove 'dbo' if present, as it's the default schema in SQL Server
+
+        all_schemas_info = []
+
+        for schema_name in schemas_to_check:
+            tables = inspector.get_table_names(schema=schema_name)
+            views = []
+            try:
+                # get_view_names might not be supported by all dialects
+                views = inspector.get_view_names(schema=schema_name)
+            except NotImplementedError:
+                print(f"⚠️ Dialect {engine.dialect.name} does not support get_view_names().")
+            
+            if tables or views:
+                # Use a placeholder for the default schema name for frontend/URL safety
+                schema_key = schema_name if schema_name is not None else "_default_"
+                all_schemas_info.append({
+                    "schema_name": schema_key,
+                    "tables": sorted(tables),
+                    "views": sorted(views)
+                })
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to retrieve tables: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to retrieve database structure: {str(e)}")
 
-    return {"tables": tables}
+    return {"schemas": all_schemas_info}
 
-@app.post("/analyze/{table_name}")
+@app.post("/analyze/{schema_name}/{item_name}")
 def analyze_table(
-    table_name: str,
+    schema_name: str,
+    item_name: str,
     connection_string: str = Body(..., embed=True),
     force_rerun: bool = False
 ):
     """
-    Generates Metrics, Schema, and AI Insights.
+    Generates Metrics, Schema, and AI Insights for a table or view.
     Stores results permanently and uses a flag to force re-analysis.
     """
-    cache_path = get_cache_path(connection_string, table_name)
+    cache_path = get_cache_path(connection_string, schema_name, item_name)
 
     # If not forcing a rerun, try to load from cache
     if not force_rerun and os.path.exists(cache_path):
@@ -78,33 +103,47 @@ def analyze_table(
         except (json.JSONDecodeError, IOError) as e:
             print(f"⚠️ Cache read failed for {cache_path}: {e}. Rerunning analysis.")
 
-    print(f"🚀 Running new analysis for table '{table_name}'...")
+    print(f"🚀 Running new analysis for '{schema_name}.{item_name}'...")
     engine = get_engine(connection_string)
     
-    # 1. Validate that the table exists in the target schema to prevent SQL injection.
+    # Convert placeholder for default schema back to None for SQLAlchemy
+    effective_schema = None if schema_name == "_default_" else schema_name
+
+    # 1. Validate that the table/view exists in the target schema to prevent SQL injection.
     try:
         inspector = inspect(engine)
-        if table_name not in inspector.get_table_names(schema=TARGET_SCHEMA):
+        all_tables = inspector.get_table_names(schema=effective_schema)
+        all_views = []
+        try:
+            all_views = inspector.get_view_names(schema=effective_schema)
+        except NotImplementedError:
+            pass # Dialect doesn't support views, continue with just tables
+
+        if item_name not in all_tables and item_name not in all_views:
             raise HTTPException(
                 status_code=404,
-                detail=f"Table '{table_name}' not found in schema '{TARGET_SCHEMA}'.",
+                detail=f"Table or view '{item_name}' not found in schema '{schema_name}'.",
             )
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Could not verify table existence: {str(e)}"
+            status_code=400, detail=f"Could not verify item existence: {str(e)}"
         )
 
-    # 2. Safely quote identifiers for the query to provide a defense-in-depth layer.
+    # 2. Safely quote identifiers for the query.
     preparer = engine.dialect.identifier_preparer
-    full_table_ref = f"{preparer.quote(TARGET_SCHEMA)}.{preparer.quote(table_name)}"
+    quoted_item = preparer.quote(item_name)
+    if effective_schema:
+        full_item_ref = f"{preparer.quote(effective_schema)}.{quoted_item}"
+    else:
+        full_item_ref = quoted_item
 
     # 3. Handle SQL Syntax (TOP vs LIMIT) based on the database dialect.
     if engine.dialect.name == "mssql":
-        query = f"SELECT TOP 100 * FROM {full_table_ref}"
+        query = f"SELECT TOP 100 * FROM {full_item_ref}"
     else:
-        query = f"SELECT * FROM {full_table_ref} LIMIT 100"
+        query = f"SELECT * FROM {full_item_ref} LIMIT 100"
 
-    count_query = f"SELECT COUNT(*) FROM {full_table_ref}"
+    count_query = f"SELECT COUNT(*) FROM {full_item_ref}"
 
     # A. Fetch Data
     try:
@@ -133,7 +172,7 @@ def analyze_table(
     summary_prompt = f"""
     As a senior business analyst, you have just received a new dataset.
 
-    Analyze this database table named '{table_name}'.
+    Analyze this database table/view named '{item_name}'.
     Columns: {columns_list}
     Sample Data:
     {data_pretable}
@@ -142,7 +181,7 @@ def analyze_table(
     """
     
     schema_prompt = f"""
-    Explain the technical schema of table '{table_name}' to a non-technical user.
+    Explain the technical schema of table/view '{item_name}' to a non-technical user.
     Columns and types: {schema_info}
     
     Explain the relationships between columns if obvious (e.g., ID linking to other things). Keep it human-friendly.

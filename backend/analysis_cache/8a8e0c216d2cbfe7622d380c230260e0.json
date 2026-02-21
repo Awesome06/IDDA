@@ -1,0 +1,15 @@
+{
+    "metrics": {
+        "total_rows": 7,
+        "columns": 2,
+        "completeness": 100.0,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business-Friendly Summary:**\n\nThe 'categories' dataset contains information about different types of bicycles, categorized by their features and characteristics. This data is useful for understanding the variety of products offered by a bicycle manufacturer or retailer.\n\n**Use Case:**\n\nAs a marketing analyst at a cycling gear company, I would analyze this data to identify trends and patterns in customer preferences when it comes to choosing bicycles. By examining the 'category_name' column, I could determine which types of bicycles are most popular among customers, allowing me to inform product development decisions and target marketing efforts towards specific categories that show promise.",
+    "schema_explanation": "Let's break down the \"categories\" table/view into simpler terms.\n\nThe \"categories\" table has two columns: \"category_id\" and \"category_name\".\n\n* \"category_id\" is like a unique address for each category. It's an integer (a whole number) that helps identify each category.\n* \"category_name\" is the actual name of the category, like \"Electronics\" or \"Fashion\". The data type for this column is a string, which means it can store text.\n\nThe relationships between these columns are straightforward:\n\n* Each category has its own unique ID (category_id), making it easy to reference and manage.\n* The category name provides a descriptive label for each category, helping you identify what kind of products or items belong to that category.\n\nWith this schema, you could use the \"categories\" table in various ways. For example:\n\n* You might have an e-commerce website with different product categories (e.g., Electronics, Fashion, Home Goods). The \"categories\" table would help organize and manage these categories.\n* A blog or online magazine might use categories to group articles by topic (e.g., Technology, Lifestyle, Entertainment).\n* An inventory management system could utilize the \"categories\" table to track different product groups and their corresponding names.\n\nOverall, this schema provides a solid foundation for categorizing and organizing items, making it useful in various applications where grouping or filtering data is necessary.",
+    "raw_schema": {
+        "category_id": "int64",
+        "category_name": "str"
+    }
+}

@@ -12,7 +12,7 @@ export default function LandingPage() {
       const res = await axios.post('http://localhost:8000/connect', { connection_string: dbUrl });
       // Store connection string in localStorage for simplicity in this demo
       localStorage.setItem('dbUrl', dbUrl); 
-      localStorage.setItem('tables', JSON.stringify(res.data.tables));
+      localStorage.setItem('schemas', JSON.stringify(res.data.schemas));
       navigate('/dashboard');
     } catch (err) {
       alert("Connection Failed: " + err.message);

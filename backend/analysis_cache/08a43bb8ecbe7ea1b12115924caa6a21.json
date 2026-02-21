@@ -1,0 +1,21 @@
+{
+    "metrics": {
+        "total_rows": 3,
+        "columns": 8,
+        "completeness": 100.0,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business-Friendly Summary:**\n\nThis 'stores' dataset contains information about various bike stores, including their unique identifiers, names, contact details, and physical locations. This data provides a snapshot of the retail operations for these bike stores.\n\n**Use Case:**\n\nA business analyst might analyze this data to identify trends in store distribution, such as identifying areas with high concentrations of bike stores or understanding which regions have limited availability of bike retailers. This analysis can inform strategic decisions about where to open new locations, optimize existing store networks, or even target specific markets for marketing campaigns.",
+    "schema_explanation": "The \"stores\" table is a digital representation of a list of physical stores, such as retail shops or restaurants. Think of it like an address book for stores!\n\nHere's what each column represents:\n\n* **store_id**: A unique number that identifies each store. This is like a fingerprint - no two stores can have the same ID.\n* **store_name**: The name of the store, which could be something simple like \"Bob's Burgers\" or more complex like \"Walmart Supercenter\".\n* **phone**: The phone number of the store, which customers might use to contact them for questions or orders.\n* **email**: The email address of the store, where they might respond to inquiries or send newsletters to subscribers.\n* **street**: The street name and number where the store is located. This helps with navigation and finding the store on a map!\n* **city**: The city where the store is situated.\n* **state**: The state (or province) where the store is located.\n* **zip_code**: A unique code that represents the postal area of the store's location.\n\nThere aren't any obvious relationships between columns, as each piece of information about a store is independent. However, this table could be used in various scenarios:\n\n1. **Store directory**: This table can serve as an online directory for customers to find and contact stores.\n2. **Inventory management**: If the \"stores\" table is connected to another table containing product information, it could help track which products are available at each store.\n3. **Delivery logistics**: The table could be used to organize delivery routes or schedules for multiple stores.\n4. **Marketing campaigns**: By linking the \"stores\" table to a customer data table, businesses can target specific customers with promotions or offers based on their proximity to individual stores.\n\nOverall, the \"stores\" table provides a foundation for storing and managing information about various physical locations, which is useful in many different contexts!",
+    "raw_schema": {
+        "store_id": "int64",
+        "store_name": "str",
+        "phone": "str",
+        "email": "str",
+        "street": "str",
+        "city": "str",
+        "state": "str",
+        "zip_code": "str"
+    }
+}

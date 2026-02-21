@@ -1,0 +1,19 @@
+{
+    "metrics": {
+        "total_rows": 4722,
+        "columns": 6,
+        "completeness": 100.0,
+        "freshness": "N/A",
+        "duplicate_rows": 0
+    },
+    "summary": "**Business Friendly Summary:**\nThis dataset, 'order_items', represents individual items ordered by customers, containing details such as the order ID, item ID, product ID, quantity, list price, and discount applied. The data provides insight into customer purchasing behavior, allowing businesses to analyze sales patterns, product demand, and pricing strategies.\n\n**Use Case:**\nA business would analyze this dataset to identify trends in customer ordering habits, such as which products are most popular, how discounts impact sales, and what price points drive revenue. By analyzing the 'order_items' table, a business could optimize its inventory management, adjust pricing strategies, and inform product development decisions to better meet customer demand.",
+    "schema_explanation": "Here's an explanation of the `order_items` table/view schema:\n\nThe `order_items` table stores information about individual products or items that are part of a larger order. Think of it like a receipt for a purchase.\n\nHere's what each column represents:\n\n* `order_id`: This is a unique identifier for the order that this item belongs to. It links back to another table (not shown here) that contains information about the entire order.\n* `item_id`: A unique identifier for this specific product or item within the order. This helps distinguish it from other items in the same order.\n* `product_id`: Another way to identify a specific product, linking back to another table (again, not shown here) that contains detailed information about each product.\n* `quantity`: The number of units of this product being ordered.\n* `list_price`: The original price of the product before any discounts were applied.\n* `discount`: Any discount that was applied to the product's price.\n\nFrom a human perspective, think of it like a shopping cart. Each item in the cart has its own unique details (product ID, quantity, etc.) and is tied back to the overall order (order ID).\n\nThis schema makes sense because:\n\n* You might want to analyze what products are commonly ordered together or at what quantities.\n* You could use this data to calculate total costs for an order, taking into account any discounts applied.\n* If you have a product catalog or inventory management system, you could link back to those systems using the `product_id` column.\n\nOverall, the `order_items` table/view provides a detailed breakdown of what's being ordered and how it relates to the larger context of an order.",
+    "raw_schema": {
+        "order_id": "int64",
+        "item_id": "int64",
+        "product_id": "int64",
+        "quantity": "int64",
+        "list_price": "float64",
+        "discount": "float64"
+    }
+}

@@ -10,7 +10,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/table/:tableName" element={<TableView />} />
+          <Route path="/table/:schemaName/:itemName" element={<TableView />} />
         </Routes>
       </div>
     </Router>

@@ -4,7 +4,7 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 
 export default function TableView() {
-  const { tableName } = useParams();
+  const { schemaName, itemName } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -12,7 +12,7 @@ export default function TableView() {
     const fetchData = async () => {
       const dbUrl = localStorage.getItem('dbUrl');
       try {
-        const res = await axios.post(`http://localhost:8000/analyze/${tableName}`, { 
+        const res = await axios.post(`http://localhost:8000/analyze/${schemaName}/${itemName}`, { 
           connection_string: dbUrl 
         });
         setData(res.data);
@@ -23,12 +23,17 @@ export default function TableView() {
       }
     };
     fetchData();
-  }, [tableName]);
+  }, [schemaName, itemName]);
 
   if (loading) return <div className="text-center mt-20 text-xl animate-pulse">Generating AI Analysis... (This may take a moment)</div>;
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-gray-800">
+          Analysis for: <span className="font-mono text-blue-600">{schemaName === '_default_' ? '' : `${schemaName}.`}{itemName}</span>
+        </h1>
+      </header>
       
       {/* SECTION 1: Top (Business Summary) */}
       <section className="bg-white p-6 rounded-lg border border-gray-200 shadow">
