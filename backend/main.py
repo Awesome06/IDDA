@@ -218,6 +218,89 @@ def analyze_table(
 
     return result
 
+@app.post("/chat")
+def chat_with_agent(
+    question: str = Body(..., embed=True),
+    connection_string: str = Body(..., embed=True)
+):
+    """
+    Answers natural language questions about the database using schema information
+    and cached analysis as context.
+    """
+    print("🚀 Received chat request...")
+    
+    # 1. Get database schema structure
+    try:
+        engine = get_engine(connection_string)
+        inspector = inspect(engine)
+        schemas_to_check = [None] + inspector.get_schema_names()
+        if 'dbo' in schemas_to_check:
+           schemas_to_check.remove('dbo')
+
+        all_items = []
+        for schema_name in schemas_to_check:
+            schema_key = schema_name if schema_name is not None else "_default_"
+            tables = inspector.get_table_names(schema=schema_name)
+            views = []
+            try:
+                views = inspector.get_view_names(schema=schema_name)
+            except NotImplementedError:
+                pass
+            
+            for table in tables:
+                all_items.append({"schema": schema_key, "item": table, "type": "TABLE"})
+            for view in views:
+                all_items.append({"schema": schema_key, "item": view, "type": "VIEW"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve database structure for chat context: {str(e)}")
+
+    # 2. Build context from schema and cached analysis
+    context_str = "Here is the available database structure:\n"
+    for item in all_items:
+        context_str += f"- {item['type']}: {item['schema']}.{item['item']}\n"
+    
+    context_str += "\nHere are summaries for some of the analyzed items:\n"
+    
+    found_cache = False
+    for item in all_items:
+        cache_path = get_cache_path(connection_string, item['schema'], item['item'])
+        if os.path.exists(cache_path):
+            found_cache = True
+            with open(cache_path, 'r') as f:
+                cache_data = json.load(f)
+                summary = cache_data.get('summary', 'No summary available.')
+                context_str += f"\n--- Analysis for {item['type']} `{item['schema']}.{item['item']}` ---\n"
+                context_str += f"{summary}\n"
+
+    if not found_cache:
+        context_str += "No pre-analyzed information is available for any tables or views yet.\n"
+
+    # 3. Construct the final prompt for the LLM
+    prompt = f"""
+You are an expert data analyst assistant. Your task is to answer questions about a database based on the provided context.
+The context includes the database's schema structure and, where available, AI-generated summaries of tables and views.
+Use only the information provided in the context to answer the question. Do not make up information.
+If the context is insufficient to answer the question, state that you don't have enough information.
+
+--- CONTEXT ---
+{context_str}
+--- END CONTEXT ---
+
+Based on the context above, please answer the following question:
+Question: "{question}"
+"""
+
+    # 4. Call the LLM and return the response
+    model = "llama3"
+    print("💬 Sending prompt to LLM...")
+    try:
+        response = ollama.chat(model=model, messages=[{'role': 'user', 'content': prompt}])
+        answer = response['message']['content']
+        return {"answer": answer}
+    except Exception as e:
+        print(f"❌ LLM call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get response from LLM: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

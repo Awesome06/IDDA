@@ -20,7 +20,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="dashboard-header">
         <div className="flex-1"></div> {/* Left Spacer */}
-        <h1 className="dashboard-header-title">Intelligent Data Agent</h1>
+        <h1 className="dashboard-header-title">Intelligent</h1>
         <div className="dashboard-header-actions">
           <button
             className="dashboard-chat-button"
