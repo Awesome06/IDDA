@@ -5,9 +5,13 @@ import axios from 'axios';
 export default function LandingPage() {
   // Default string for testing (SQL Server example)
   const [dbUrl, setDbUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleConnect = async () => {
+    setIsLoading(true);
+    setError('');
     try {
       const res = await axios.post('http://localhost:8000/connect', { connection_string: dbUrl });
       // Store connection string in localStorage for simplicity in this demo
@@ -15,7 +19,10 @@ export default function LandingPage() {
       localStorage.setItem('schemas', JSON.stringify(res.data.schemas));
       navigate('/dashboard');
     } catch (err) {
-      alert("Connection Failed: " + err.message);
+      const detail = err.response?.data?.detail || err.message;
+      setError(`Connection Failed: ${detail}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -30,13 +37,16 @@ export default function LandingPage() {
         value={dbUrl} 
         onChange={(e) => setDbUrl(e.target.value)} 
         placeholder="Enter Your Database Connection String" 
+        disabled={isLoading}
       />
       <button 
         onClick={handleConnect}
         className="landing-page-button"
+        disabled={isLoading || !dbUrl.trim()}
       >
-        Connect & Scan
+        {isLoading ? 'Connecting...' : 'Connect & Scan'}
       </button>
+      {error && <p className="landing-page-error">{error}</p>}
     </div>
   </div>
 );
