@@ -1,4 +1,4 @@
-# Intelligent_Data_Dictionary_Agent
+# Alphabetic - Intelligent Data Agent
 
 A smart, AI-powered tool that automatically connects to your database, analyzes its structure, and generates easy-to-understand documentation and insights. Ask questions about your data in plain English and get instant answers.
 
