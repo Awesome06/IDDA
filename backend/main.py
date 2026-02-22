@@ -502,7 +502,6 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
 
             **1. Analyze the User's Question:**
             - User Question: "{question}"
-            - Does the question ask for a total, sum, average, or other aggregation across multiple rows (e.g., "total order value")? If so, you will likely need a `GROUP BY` and a `HAVING` clause, or a Common Table Expression (CTE). A simple `WHERE` clause on a single row's value is probably incorrect for this kind of question.
 
             **2. Analyze the Failed Query and Error:**
             - Failed SQL:
@@ -511,15 +510,18 @@ async def handle_sql_chat(question: str, schemas_structure: List[Dict[str, Any]]
               ```
             - Error Message:
               {str(e)}
-            - The error "Invalid column name 'X'" means column 'X' is not in the table you're referencing.
-            - The error "Ambiguous column name 'Y'" means column 'Y' exists in multiple tables in your FROM/JOIN clauses. You MUST prefix it with the correct table alias (e.g., `table_alias.Y`).
 
             **3. Debugging and Correction Steps:**
-            - **Re-evaluate Logic:** Based on your analysis of the user's question, was the original query's logic correct? For a question like "orders worth more than 500", you must sum the items for each order and then filter. You cannot filter individual items in the `WHERE` clause.
-            - **Consult the Schema:** Look at the `Database Schema` provided below. Find which table *actually* contains the invalid or ambiguous column(s) mentioned in the error.
-            - **Correct Column References:** Correct all column references to use the right table alias (e.g., `oi.discount`, `st.store_name`). **This is especially important in WHERE, GROUP BY, and ORDER BY clauses to avoid "Ambiguous column name" errors.**
-            - **Fix JOINs:** Ensure all necessary tables are joined correctly. To link orders to products, you MUST go through the `order_items` table.
-            - **Use CTEs for Clarity:** For complex logic involving aggregation and filtering, using a Common Table Expression (CTE) is the best practice. First, calculate the aggregate values in the CTE, then join the results back to other tables.
+            - **Identify the Error Type:** The error message indicates the problem.
+              - If the error is "Invalid column name 'X'": This means column 'X' does not exist in the table it's being selected from in the `FROM` or `JOIN` clauses.
+                1.  **Find the correct table:** Look at the `Database Schema` below and find which table *actually* contains column 'X'.
+                2.  **Add a JOIN:** If that table is not already in the query, add the correct `INNER JOIN` to it. Find the foreign key relationship to link it to the other tables.
+                3.  **Update references:** Change the query to select 'X' from the correct table alias (e.g., `new_alias.X`). Update the `GROUP BY` clause as well if needed.
+              - If the error is "Ambiguous column name 'Y'": This means column 'Y' exists in multiple tables in your `FROM`/`JOIN` clauses. You MUST prefix it with the correct table alias everywhere it is used (e.g., `table_alias.Y`), especially in `SELECT`, `WHERE`, `GROUP BY`, and `ORDER BY`.
+
+            - **Re-evaluate Logic:**
+              - For questions about totals or aggregates (e.g., "total order value > 500"), you must calculate the sum for each group (`GROUP BY`) and then filter the groups using `HAVING`. A `WHERE` clause filters individual rows *before* grouping and is likely incorrect for this.
+              - For complex logic, using a Common Table Expression (CTE) is best practice. First, calculate aggregates in the CTE, then join the results back to other tables.
             
             **Database Schema:**
             {schema_context}
